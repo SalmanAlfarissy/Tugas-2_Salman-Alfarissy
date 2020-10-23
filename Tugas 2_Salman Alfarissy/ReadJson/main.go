@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"time"
 )
 
 // Order struct (Model) ...
@@ -36,56 +34,49 @@ type nilai struct {
 
 func main() {
 
-	url := "http://localhost:8181/mahasiswa"
-
-	spaceClient := http.Client{
-		Timeout: time.Second * 2, // Timeout after 2 seconds
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	getRequest, err := http.Get("http://localhost:8181/mahasiswa")
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error!")
+		fmt.Println(err)
 	}
 
-	req.Header.Set("User-Agent", "spacecount-tutorial")
+	defer getRequest.Body.Close()
 
-	res, getErr := spaceClient.Do(req)
-	if getErr != nil {
-		log.Fatal(getErr)
+	rawData, err := ioutil.ReadAll(getRequest.Body)
+
+	if err != nil {
+		fmt.Println("Error!")
+		fmt.Println(err)
 	}
+	mhsi := []mahasiswa{}
 
-	if res.Body != nil {
-		defer res.Body.Close()
-	}
+	jsonErr := json.Unmarshal(rawData, &mhsi)
 
-	body, readErr := ioutil.ReadAll(res.Body)
-
-	if readErr != nil {
-		log.Fatal(readErr)
-	}
-
-	mhsi := mahasiswa{}
-	jsonErr := json.Unmarshal(body, &mhsi)
 	if jsonErr != nil {
-		log.Fatal(jsonErr)
+		fmt.Println(jsonErr)
 	}
 
-	fmt.Println(mhsi.NoBp)
-	fmt.Println(mhsi.Nama)
-	fmt.Println(mhsi.NoHp)
-	fmt.Println(mhsi.Alamat.Jalan)
-	fmt.Println(mhsi.Alamat.Kelurahan)
-	fmt.Println(mhsi.Alamat.Kecamatan)
-	fmt.Println(mhsi.Alamat.Kabupaten)
-	fmt.Println(mhsi.Alamat.Provinsi)
+	for i := 0; i < len(mhsi); i++ {
+		fmt.Printf("==========================================\n")
+		fmt.Println("NoBP : ", mhsi[i].NoBp)
+		fmt.Println("Nama : ", mhsi[i].Nama)
+		fmt.Println("NoHp : ", mhsi[i].NoHp)
+		fmt.Println("Jalan : ", mhsi[i].Alamat.Jalan)
+		fmt.Println("Kelurahan : ", mhsi[i].Alamat.Kelurahan)
+		fmt.Println("Kecamatan : ", mhsi[i].Alamat.Kecamatan)
+		fmt.Println("Kabupaten : ", mhsi[i].Alamat.Kabupaten)
+		fmt.Println("Provinsi : ", mhsi[i].Alamat.Provinsi)
 
-	for _, nilai := range mhsi.Nilai {
-		fmt.Println("No BP", nilai.NoBp)
-		fmt.Println("ID Mata Kuliah", nilai.IDMatkul)
-		fmt.Println("Nama Mata Kuliah", nilai.NamaMatkul)
-		fmt.Println("Nilai", nilai.Nilai)
-		fmt.Println("Semester", nilai.Semester)
+		for _, nilai := range mhsi[i].Nilai {
+			fmt.Println("No BP", nilai.NoBp)
+			fmt.Println("ID Mata Kuliah", nilai.IDMatkul)
+			fmt.Println("Nama Mata Kuliah", nilai.NamaMatkul)
+			fmt.Println("Nilai", nilai.Nilai)
+			fmt.Println("Semester", nilai.Semester)
+		}
+		fmt.Printf("\n")
+
 	}
 
 }
